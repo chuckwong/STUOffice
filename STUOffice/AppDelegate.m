@@ -21,24 +21,24 @@
     // Override point for customization after application launch.
     
     // Umeng
-    [MobClick startWithAppkey:@"55e308f1e0f55a2812002610" reportPolicy:BATCH channelId:@"App Store"];
+//    [MobClick startWithAppkey:@"55e308f1e0f55a2812002610" reportPolicy:BATCH channelId:@"App Store"];
     
     // version标识
-    NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-    [MobClick setAppVersion:version];
+//    NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+//    [MobClick setAppVersion:version];
     
     
     // setting status bar style
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleDefault];
     
     // setting nav bar background color
-    [UINavigationBar appearance].barTintColor = COLOR_NAVBAR;
+//    [UINavigationBar appearance].barTintColor = COLOR_NAVBAR;
     
     // setting nav bar text style
-    [UINavigationBar appearance].titleTextAttributes = @{NSFontAttributeName:[UIFont boldSystemFontOfSize:19.0], NSForegroundColorAttributeName:[UIColor whiteColor]};
+    [UINavigationBar appearance].titleTextAttributes = @{NSFontAttributeName:[UIFont boldSystemFontOfSize:19.0], NSForegroundColorAttributeName:COLOR_NAVBAR};
     
     // setting nav bar item color
-    [UINavigationBar appearance].tintColor = [UIColor whiteColor];
+    [UINavigationBar appearance].tintColor = COLOR_NAVBAR;
     
     // setting backButton Icon
     UIImage *backBtnIcon = [UIImage imageNamed:@"toolbar-previous"];

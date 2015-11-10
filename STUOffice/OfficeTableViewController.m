@@ -17,14 +17,25 @@
 #import "Define.h"
 #import "MobClick.h"
 #import "SIAlertView.h"
+#import "KGModal.h"
+#import "LoginViewController.h"
 
-#define OFFICE_URL @"http://office.stu.edu.cn/csweb/list.jsp"
+#define OFFICE_COUNT_URL @"http://wechat.stu.edu.cn//webservice_oa/OA/GetDocNum"
+#define OFFICE_DOCUMENT_URL @"http://wechat.stu.edu.cn//webservice_oa/OA/GetDOCDetail"
+
+static const NSInteger kMaximunNumberOfDocuments = 20;
+
+static const NSTimeInterval kRequestTimeout = 8.0;
 
 @interface OfficeTableViewController () <UITableViewDelegate>
 
 @property (strong, nonatomic) NSMutableArray *officeData;
+
 @property (nonatomic) BOOL isLoading;
+
 @property (nonatomic) NSUInteger resultNum;
+
+@property (nonatomic) NSInteger pageIndex;
 
 @end
 
@@ -35,23 +46,33 @@
 {
     [super viewDidLoad];
     
+    // View
     [self setupBackBarButton];
     [self setupExclusiveTouch];
     [self setupTableView];
     [self setupRefreshControl];
-    [self setupOfficeData];
-    
-    // 去掉黑边
-    for (UIView *view1 in self.navigationController.navigationBar.subviews) {
-        for (UIView *view2 in view1.subviews) {
-            if ([view2 isKindOfClass:[UIImageView class]] && view2.bounds.size.height <= 1.0) {
-                [view2 removeFromSuperview];
-            }
-        }
-    }
+
+    // Data
+//    [self login];
+    [self setupDocumentData];
 }
 
-#pragma mark - setup
+#pragma mark - loginAuthentication
+//- (void)login {
+//
+//
+//
+//    LoginViewController *lgvc = [[LoginViewController alloc] init];
+//    lgvc.delegate = self;
+//    [[KGModal sharedInstance] showWithContentViewController:lgvc];
+//}
+
+#pragma mark - SuccessLoginDelegate
+//- (void)loginSucceeded {
+//    [self setupOfficeData];
+//}
+
+#pragma mark - Setup Documents
 - (void)setupBackBarButton
 {
     UIBarButtonItem *backItem = [[UIBarButtonItem alloc] initWithTitle:@""
@@ -83,11 +104,12 @@
     self.refreshControl = refreshControl;
 }
 
-- (void)setupOfficeData
+- (void)setupDocumentData
 {
+    _isLoading = YES;
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-    [self performSelector:@selector(sendRequest) withObject:nil afterDelay:0.7];
+    [self performSelector:@selector(getDocumentList) withObject:nil afterDelay:0.7];
 }
 
 #pragma mark - refresh
@@ -96,108 +118,214 @@
     // 网络访问
     [MobClick event:@"Refresh"];
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    [self performSelector:@selector(sendRequest) withObject:nil afterDelay:0.7];
+    [self performSelector:@selector(getDocumentList) withObject:nil afterDelay:0.7];
 }
-
 
 #pragma mark - send request
-// 发送请求
-- (void)sendRequest
+
+// getDocumentList
+- (void)getDocumentList
 {
     AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    manager.requestSerializer.timeoutInterval = 3.0;
-    [manager.requestSerializer setValue:@"Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4" forHTTPHeaderField:@"User-Agent"];
-    NSDictionary *parameters = @{@"pageindex": @"1", @"pagesize": @"25"};
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    [manager POST:OFFICE_URL parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        NSLog(@"成功");
-        [self getTotalNum:operation.responseString];
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSLog(@"失败 - %@", error);
-        [self dealWithError];
-    }];
-}
-
-// 获取总数
-- (void)getTotalNum:(NSString *)responseHtml
-{
-    NSString *pantten = [NSString stringWithFormat:@"共(\\d+)条记录"];
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pantten options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators error:NULL];
-    NSTextCheckingResult *result = [regex firstMatchInString:responseHtml options:0 range:NSMakeRange(0, [responseHtml length])];
-    if (result) {
-        // 得到结果数 > 0
-        NSString *resultNumStr = [responseHtml substringWithRange:[result rangeAtIndex:1]];
-        NSUInteger resultNum = [resultNumStr integerValue];
-        _resultNum = resultNum;
-        [self dealWithResponseHtml:responseHtml];
-    } else {
-        // 一般不会发生 - 未知错误 - 网页被修改了
-        [self dealWithError];
-    }
-}
-
-// 解析办公自动化信息
-- (void)dealWithResponseHtml:(NSString *)responseHtml
-{
-    NSString *pattern = [NSString stringWithFormat:@"<TR class=datalight>\\s*<TD width=\".*?\" style=\"height:25px;\"><a target ='_blank'  href='(.*?)' title='(.*?)'><img class=\"vt\" src=\"/csweb/images/38.jpg\"/><span style=\"padding-top:2px;\">.*?</span></a></TD>\\s*<TD width=\".*?\" align=\"center\">(.*?)</TD>\\s*<TD width=\".*?\" align=\"center\">(.*?)</TD>\\s*</TR>"];
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators error:NULL];
-    NSArray *matchedArray = [regex matchesInString:responseHtml options:0 range:NSMakeRange(0, responseHtml.length)];
-    if (matchedArray.count > 0) {
-        // 匹配成功
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-        NSMutableArray *officeData = [NSMutableArray array];
-        for (NSTextCheckingResult *result in matchedArray) {
-            
-            NSString *contentURL = [@"http://office.stu.edu.cn" stringByAppendingString:[responseHtml substringWithRange:[result rangeAtIndex:1]]];
-            NSString *titleName = [self shrinkTitle:[responseHtml substringWithRange:[result rangeAtIndex:2]]];
-            NSString *publisher1 = [self shrinkPublisher:[responseHtml substringWithRange:[result rangeAtIndex:3]]];
-            NSString *publisher2 = [responseHtml substringWithRange:[result rangeAtIndex:3]];
-            NSString *date = [self formateDate:[responseHtml substringWithRange:[result rangeAtIndex:4]]];
-        
-            NSMutableDictionary *office = [NSMutableDictionary dictionaryWithDictionary:@{@"contentURL": contentURL, @"titleName": titleName, @"publisher1": publisher1, @"publisher2": publisher2, @"date": date}];
-            
-            [officeData addObject:office];
-        }
-        _officeData = officeData;
-        [self.tableView reloadData];
-        [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
+    manager.requestSerializer.timeoutInterval = kRequestTimeout;
+    NSDictionary *parameters = @{@"row_start": @"1", @"row_end": [NSString stringWithFormat:@"%d", kMaximunNumberOfDocuments]};  // row_end means the amount
+//    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"text/html"];
+    [manager GET:OFFICE_DOCUMENT_URL parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
+//        NSLog(@"list - 成功 - %@", responseObject);
+        self.pageIndex = 0;
+        [self setupDocumentList:responseObject];
         if (self.refreshControl.isRefreshing) {
             [self.refreshControl endRefreshing];
         }
-    } else {
-        // 一般不会发生 - 未知错误 - 网页被修改了
-        NSLog(@"没有匹配");
+        [MBProgressHUD  hideAllHUDsForView:self.navigationController.view animated:YES];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"list - 失败 - %@", error);
+        _isLoading = NO;
         [self dealWithError];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }];
+}
+
+// setupDocumentList
+- (void)setupDocumentList:(NSArray *)list {
+    
+    NSMutableArray *documentList = [NSMutableArray array];
+    
+    for (NSDictionary *document in list) {
+        
+        NSString *documentName = [self shrinkTitle:document[@"DOCSUBJECT"]];
+        NSString *documentDate = [self formateDate:document[@"DOCVALIDDATE"]];
+        NSString *documentPublisher = document[@"SUBCOMPANYNAME"];
+        NSString *documentPublisherAbbr = [self shrinkPublisher:documentPublisher];
+        NSString *documentDetail = document[@"DOCCONTENT"];
+//        NSNumber *documentRowStart = @0;
+        
+        NSDictionary *dict = @{@"documentName":documentName,
+                               @"documentDate":documentDate,
+                               @"documentPublisher":documentPublisher,
+                               @"documentPublisherAbbr":documentPublisherAbbr,
+                               @"documentDetail":[self flattenHTML:documentDetail trimWhiteSpace:YES],
+//                               @"documentRowStart":documentRowStart,
+                               };
+        [documentList addObject:dict];
+    }
+    
+    if (self.pageIndex == 0) {
+        _officeData = documentList;
+    } else {
+        [self addNewDocumentWith:documentList];
+    }
+    
+    [self.tableView reloadData];
+    
+    _isLoading = NO;
+}
+
+
+#pragma mark - Loading More Documents
+// ScrollView Delegate
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    if ((scrollView.contentSize.height - scrollView.frame.size.height - scrollView.contentOffset.y < self.tableView.tableFooterView.bounds.size.height) && (!_isLoading)) {
+        [self getNewDocuments];
     }
 }
 
-#pragma mark - formate
-- (NSString *)shrinkTitle:(NSString *)title
+// 获取信息
+- (void)getNewDocuments
 {
-    return [NSString stringWithFormat:@"          %@", title];
+    [MobClick event:@"Load_More"];
+    _isLoading = YES;
+    self.pageIndex++;
+    [(OfficeFooterView *)self.tableView.tableFooterView showLoading];
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    [self performSelector:@selector(getMoreDocumentList) withObject:nil afterDelay:0.7];
 }
 
+- (void)getMoreDocumentList
+{
+    NSInteger row_start = kMaximunNumberOfDocuments * self.pageIndex + 1;
+    NSInteger row_end = kMaximunNumberOfDocuments * (self.pageIndex + 1);
+    NSString *startStr = [NSString stringWithFormat:@"%d", row_start];
+    NSString *endStr = [NSString stringWithFormat:@"%d", row_end];
+    
+    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
+    manager.requestSerializer.timeoutInterval = kRequestTimeout;
+    NSDictionary *parameters = @{@"row_start": startStr, @"row_end": endStr};  // row_end means the amount
+    //    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"text/html"];
+    [manager GET:OFFICE_DOCUMENT_URL parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        NSLog(@"list - 成功 - %@", responseObject);
+        [self setupDocumentList:responseObject];
+        [MBProgressHUD hideAllHUDsForView:self.navigationController.view animated:YES];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"list - 失败 - %@", error);
+        [self showHUDWithText:@"无法连接服务器" andHideDelay:1.5];
+        [self performSelector:@selector(restoreState) withObject:nil afterDelay:1.5];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }];
+}
+
+- (void)addNewDocumentWith:(NSMutableArray *)officeData
+{
+    [_officeData addObjectsFromArray:officeData];
+    [(OfficeFooterView *)self.tableView.tableFooterView hideLoading];
+    _isLoading = NO;
+}
+
+
+#pragma mark - error display
+- (void)dealWithError
+{
+    [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    
+    if (!self.refreshControl.isRefreshing) {
+        // Show AlertView
+        [self showAlertView];
+    } else {
+        // nothing TODO
+        [self showHUDWithText:@"无法连接服务器" andHideDelay:1.5];
+        [self.refreshControl endRefreshing];
+    }
+}
+
+- (void)showAlertView
+{
+    SIAlertView *alertView = [[SIAlertView alloc] initWithTitle:@"错误" andMessage:@"当前网络不可用"];
+    
+    alertView.transitionStyle = SIAlertViewTransitionStyleDropDown;
+    
+    [alertView addButtonWithTitle:@"重试" type:SIAlertViewButtonTypeDestructive handler:^(SIAlertView *alertView) {
+        [self setupDocumentData];
+    }];
+    
+    [alertView show];
+}
+
+- (void)restoreState
+{
+    [self.tableView setContentOffset:CGPointMake(0, self.tableView.contentSize.height-self.tableView.frame.size.height-self.tableView.tableFooterView.frame.size.height) animated:NO];
+    [(OfficeFooterView *)self.tableView.tableFooterView hideLoading];
+    _isLoading = NO;
+    self.pageIndex--;
+}
+
+
+#pragma mark - SearchPress
+// searchPress
+- (IBAction)searchPress:(UIBarButtonItem *)sender
+{
+    UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    OfficeSearchTableViewController *ostvc = [sb instantiateViewControllerWithIdentifier:@"ostvc"];
+    [self.navigationController pushViewController:ostvc animated:YES];
+}
+
+
+#pragma mark - data formating
+// publishList
++ (NSDictionary *)publisherList
+{
+    return @{@"汕头大学":@"汕大", @"汕头大学党委":@"党委", @"汕头大学纪委":@"纪委", @"党委宣传部":@"党宣传", @"党政办公室":@"党政办", @"纪委办公室":@"纪委办", @"监察审计处":@"审计处", @"资源管理处":@"管理处", @"党委组织统战部":@"统战部", @"至诚书院":@"至诚院", @"研究生学院":@"研学院", @"继续教育学院":@"继教院", @"长江艺术与设计学院":@"艺术院", @"长江新闻与传播学院":@"新闻院", @"艺术教育中心":@"AEC", @"英语语言中心":@"EAC", @"教师发展中心":@"教发部", @"网络与信息中心":@"网络部", @"校报编辑部":@"校报部", @"学报编辑部":@"学报部", @"华文文学编辑部":@"华文部", @"高等教育研究所":@"高研所", @"招生办公室":@"招生办", @"中心实验室":@"实验室", @"港澳台事务办公室":@"港澳室", @"国际交流合作处":@"国际处", @"发展规划办":@"发规办", @"学生创业中心":@"创业部", @"教师发展与教育评估中心":@"评估部", @"学位评定委员会":@"学评会"};
+}
+
+#pragma mark - formate method
+
+- (NSString *)shrinkTitle:(NSString *)title
+{
+    return [NSString stringWithFormat:@"            %@", title];
+}
 
 - (NSString *)shrinkPublisher:(NSString *)publisher
 {
     NSDictionary *list = [OfficeTableViewController publisherList];
+    
     for (id key in list) {
+        
         if ([publisher isEqualToString:key]) {
             return [list objectForKey:key];
         }
     }
+    
     return publisher;
 }
 
-
 - (NSString *)formateDate:(NSString *)date
 {
+    if ([date isEqual:[NSNull null]])
+        return @"该文档没有日期";
+    
     NSArray *strArray = [date componentsSeparatedByString:@"-"];
     return [NSString stringWithFormat:@"%@年%@月%@日", strArray[0], strArray[1], strArray[2]];
 }
 
 
+
 #pragma mark - tableView delegate
+
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     return _officeData.count;
@@ -212,7 +340,9 @@
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
     UIView *headerView = [[UIView alloc] init];
+    
     headerView.backgroundColor = [UIColor clearColor];
+    
     return headerView;
 }
 
@@ -224,12 +354,9 @@
     
     OfficeTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"OFFICECELL"];
     
-    cell.titleNameLabel.text = _officeData[section][@"titleName"];
-    cell.publisherLabel.text = _officeData[section][@"publisher1"];
-    cell.dateLabel.text = _officeData[section][@"date"];
-    
-    // 居上
-    [((OfficeLabel *)cell.titleNameLabel) setVerticalAlignment:VerticalAlignmentTop];
+    cell.titleNameLabel.text = _officeData[section][@"documentName"];
+    cell.publisherLabel.text = _officeData[section][@"documentPublisherAbbr"];
+    cell.dateLabel.text = _officeData[section][@"documentDate"];
     
     return cell;
 }
@@ -240,163 +367,52 @@
     NSUInteger section = indexPath.section;
     UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     OfficeDetailViewController *odvc = [sb instantiateViewControllerWithIdentifier:@"odvc"];
-    odvc.title = _officeData[section][@"publisher2"];
-    odvc.url = _officeData[section][@"contentURL"];
+    odvc.title = _officeData[section][@"documentPublisher"];
+    odvc.detail = _officeData[section][@"documentDetail"];
+    odvc.publisher = _officeData[section][@"documentPublisherAbbr"];
+    odvc.dateStr = _officeData[section][@"documentDate"];
+    odvc.documentTitle = _officeData[section][@"documentName"];
     [self.navigationController pushViewController:odvc animated:YES];
 }
 
 
-#pragma mark - loading new
-// 加载更多数据
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView
-{
-    if ((scrollView.contentSize.height - scrollView.frame.size.height - scrollView.contentOffset.y < self.tableView.tableFooterView.bounds.size.height) && (_officeData.count < _resultNum) && (!_isLoading)) {
-        [self getNewOffice];
-    }
-}
-
-// 获取信息
-- (void)getNewOffice
-{
-    [MobClick event:@"Load_More"];
-    _isLoading = YES;
-    [(OfficeFooterView *)self.tableView.tableFooterView showLoading];
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
-    [self performSelector:@selector(sendNewRequest) withObject:nil afterDelay:0.7];
-}
-
-
-- (void)sendNewRequest
-{
-    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    manager.requestSerializer.timeoutInterval = 3.0;
-    [manager.requestSerializer setValue:@"Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4" forHTTPHeaderField:@"User-Agent"];
-    NSInteger page = _officeData.count / 25 + 1;
-    NSLog(@"page - %ld", (long)page);
-    NSDictionary *parameters = @{@"pageindex": [NSString stringWithFormat:@"%ld", (long)page], @"pagesize": @"25"};
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    [manager POST:OFFICE_URL parameters:parameters success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        NSLog(@"成功");
-        [self dealWithNewResponseHtml:operation.responseString];
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSLog(@"失败 - %@", error);
-        NSLog(@"没有匹配");
-        [self dealWithErrorWhileLoadingNew];
-    }];
-}
-
-
-- (void)dealWithNewResponseHtml:(NSString *)responseHtml
-{
-    NSString *pattern = [NSString stringWithFormat:@"<TR class=datalight>\\s*<TD width=\".*?\" style=\"height:25px;\"><a target ='_blank'  href='(.*?)' title='(.*?)'><img class=\"vt\" src=\"/csweb/images/38.jpg\"/><span style=\"padding-top:2px;\">.*?</span></a></TD>\\s*<TD width=\".*?\" align=\"center\">(.*?)</TD>\\s*<TD width=\".*?\" align=\"center\">(.*?)</TD>\\s*</TR>"];
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators error:NULL];
-    NSArray *matchedArray = [regex matchesInString:responseHtml options:0 range:NSMakeRange(0, responseHtml.length)];
-    if (matchedArray.count > 0) {
-        // 匹配成功
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-        NSMutableArray *officeData = [NSMutableArray array];
-        for (NSTextCheckingResult *result in matchedArray) {
-            
-            NSString *contentURL = [@"http://office.stu.edu.cn" stringByAppendingString:[responseHtml substringWithRange:[result rangeAtIndex:1]]];
-            NSString *titleName = [self shrinkTitle:[responseHtml substringWithRange:[result rangeAtIndex:2]]];
-            NSString *publisher1 = [self shrinkPublisher:[responseHtml substringWithRange:[result rangeAtIndex:3]]];
-            NSString *publisher2 = [responseHtml substringWithRange:[result rangeAtIndex:3]];
-            NSString *date = [self formateDate:[responseHtml substringWithRange:[result rangeAtIndex:4]]];
-            
-            NSMutableDictionary *office = [NSMutableDictionary dictionaryWithDictionary:@{@"contentURL": contentURL, @"titleName": titleName, @"publisher1": publisher1, @"publisher2": publisher2, @"date": date}];
-            
-            [officeData addObject:office];
-        }
-        [self addNewOfficeWith:officeData];
-    } else {
-        NSLog(@"没有匹配");
-        // 一般不会发生 - 未知错误 - 网页被修改了
-        [self dealWithErrorWhileLoadingNew];
-    }
-}
-
-- (void)addNewOfficeWith:(NSMutableArray *)officeData
-{
-    [_officeData addObjectsFromArray:officeData];
-    [self.tableView reloadData];
-    [(OfficeFooterView *)self.tableView.tableFooterView hideLoading];
-    if (_officeData.count >= _resultNum) {
-        UIView *endFooterView = [[UIView alloc] initWithFrame:CGRectMake(8.6f, 0, self.tableView.bounds.size.width-8.6f, 0.3)];
-        endFooterView.backgroundColor = RGB(200, 199, 204);
-        self.tableView.tableFooterView = endFooterView;
-    }
-    _isLoading = NO;
-}
-
-
-#pragma mark - error display
-// while loading firstly
-- (void)dealWithError
-{
-    [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+#pragma mark - HUD
+- (void)showHUDWithText:(NSString *)string andHideDelay:(NSTimeInterval)delay {
     
-    if (!self.refreshControl.isRefreshing) {
-        // Show AlertView
-        [self showAlertView];
-    } else {
-        // nothing TODO
-        [self.refreshControl endRefreshing];
-    }
-}
-
-- (void)showAlertView
-{
-    SIAlertView *alertView = [[SIAlertView alloc] initWithTitle:@"提示" andMessage:@"获取失败\n(请连入校园网>_<)"];
-    
-    alertView.transitionStyle = SIAlertViewTransitionStyleDropDown;
-    
-    [alertView addButtonWithTitle:@"重试" type:SIAlertViewButtonTypeDestructive handler:^(SIAlertView *alertView) {
-        [self setupOfficeData];
-    }];
-    
-    [alertView show];
-}
-
-// while getting new
-- (void)dealWithErrorWhileLoadingNew
-{
-    [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    [MBProgressHUD hideAllHUDsForView:self.navigationController.view animated:YES];
     
     MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
     hud.mode = MBProgressHUDModeText;
-    hud.labelText = @"获取失败(请连入校园网>_<)";
+    hud.labelText = string;
     hud.margin = 10.f;
     hud.removeFromSuperViewOnHide = YES;
-    
-    NSTimeInterval delay = 1.5;
-    
     [hud hide:YES afterDelay:delay];
+}
+
+
+- (NSString *)flattenHTML:(NSString *)html trimWhiteSpace:(BOOL)trim
+{
+    html = [html stringByReplacingOccurrencesOfString:@"&ldquo;" withString:@"《"];
+    html = [html stringByReplacingOccurrencesOfString:@"&rdquo;" withString:@"》"];
+    html = [html stringByReplacingOccurrencesOfString:@"!@#$%^&*" withString:@""];
+    html = [html stringByReplacingOccurrencesOfString:@"&#160;" withString:@" "];
+    html = [html stringByReplacingOccurrencesOfString:@"&nbsp;" withString:@" "];
+    html = [html stringByReplacingOccurrencesOfString:@"<br />" withString:@"\n"];
     
-    [self performSelector:@selector(restoreState) withObject:nil afterDelay:delay];
+    NSScanner *theScanner = [NSScanner scannerWithString:html];
+    NSString *text = nil;
+    while ([theScanner isAtEnd] == NO) {
+        // find start of tag
+        [theScanner scanUpToString:@"<" intoString:NULL] ;
+        // find end of tag
+        [theScanner scanUpToString:@">" intoString:&text] ;
+        // replace the found tag with a space
+        //(you can filter multi-spaces out later if you wish)
+        html = [html stringByReplacingOccurrencesOfString:[NSString stringWithFormat:@"%@>", text] withString:@""];
+    }
+    html = [html stringByReplacingOccurrencesOfString:@"&nbsp;" withString:@""];
+    return trim ? [html stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] : html;
 }
 
-- (void)restoreState
-{
-    [self.tableView setContentOffset:CGPointMake(0, self.tableView.contentSize.height-self.tableView.frame.size.height-self.tableView.tableFooterView.frame.size.height) animated:NO];
-    [(OfficeFooterView *)self.tableView.tableFooterView hideLoading];
-    _isLoading = NO;
-}
-
-// searchPress
-- (IBAction)searchPress:(UIBarButtonItem *)sender
-{
-    UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    OfficeSearchTableViewController *ostvc = [sb instantiateViewControllerWithIdentifier:@"ostvc"];
-    [self.navigationController pushViewController:ostvc animated:YES];
-}
-
-
-// publishList
-+ (NSDictionary *)publisherList
-{
-    return @{@"汕头大学":@"汕大", @"汕头大学党委":@"党委", @"汕头大学纪委":@"纪委", @"党委宣传部":@"党宣传", @"党政办公室":@"党政办", @"纪委办公室":@"纪委办", @"监察审计处":@"审计处", @"资源管理处":@"管理处", @"党委组织统战部":@"统战部", @"至诚书院":@"至诚院", @"研究生学院":@"研学院", @"继续教育学院":@"继教院", @"长江艺术与设计学院":@"艺术院", @"长江新闻与传播学院":@"新闻院", @"艺术教育中心":@"AEC", @"英语语言中心":@"EAC", @"教师发展中心":@"教发部", @"网络与信息中心":@"网络部", @"校报编辑部":@"校报部", @"学报编辑部":@"学报部", @"华文文学编辑部":@"华文部", @"高等教育研究所":@"高研所", @"招生办公室":@"招生办", @"中心实验室":@"实验室", @"港澳台事务办公室":@"港澳室", @"国际交流合作处":@"国际处", @"发展规划办":@"发规办", @"学生创业中心":@"创业部", @"教师发展与教育评估中心":@"评估部", @"学位评定委员会":@"学评会"};
-}
 
 @end

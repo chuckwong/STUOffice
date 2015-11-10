@@ -21,6 +21,9 @@
 		13D89BE61B93058D00467439 /* OfficeTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BDE1B93058D00467439 /* OfficeTableViewCell.m */; };
 		13D89BE71B93058D00467439 /* OfficeTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BE01B93058D00467439 /* OfficeTableViewController.m */; };
 		13D89BEC1B93071900467439 /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BEB1B93071900467439 /* MBProgressHUD.m */; };
+		13DAE2C61BBCC6ED00964537 /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C51BBCC6ED00964537 /* LoginViewController.m */; settings = {ASSET_TAGS = (); }; };
+		13DAE2C91BBCC6FC00964537 /* BZGFormField.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C81BBCC6FC00964537 /* BZGFormField.m */; settings = {ASSET_TAGS = (); }; };
+		13DAE2CC1BBCC70800964537 /* KGModal.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2CA1BBCC70800964537 /* KGModal.m */; settings = {ASSET_TAGS = (); }; };
 		13EEA1251B93411600CFF166 /* libMobClickLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13EEA1231B93411600CFF166 /* libMobClickLibrary.a */; };
 		13EEA1271B93413700CFF166 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 13EEA1261B93413700CFF166 /* libz.dylib */; };
 		13EEA12A1B9342A700CFF166 /* SettingTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13EEA1291B9342A700CFF166 /* SettingTableViewController.m */; };
@@ -71,6 +74,12 @@
 		13D89BEA1B93071900467439 /* MBProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBProgressHUD.h; sourceTree = "<group>"; };
 		13D89BEB1B93071900467439 /* MBProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBProgressHUD.m; sourceTree = "<group>"; };
 		13D89BED1B930FDD00467439 /* Define.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Define.h; sourceTree = "<group>"; };
+		13DAE2C41BBCC6ED00964537 /* LoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoginViewController.h; sourceTree = "<group>"; };
+		13DAE2C51BBCC6ED00964537 /* LoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginViewController.m; sourceTree = "<group>"; };
+		13DAE2C71BBCC6FC00964537 /* BZGFormField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BZGFormField.h; sourceTree = "<group>"; };
+		13DAE2C81BBCC6FC00964537 /* BZGFormField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BZGFormField.m; sourceTree = "<group>"; };
+		13DAE2CA1BBCC70800964537 /* KGModal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KGModal.m; sourceTree = "<group>"; };
+		13DAE2CB1BBCC70800964537 /* KGModal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KGModal.h; sourceTree = "<group>"; };
 		13EEA1231B93411600CFF166 /* libMobClickLibrary.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libMobClickLibrary.a; sourceTree = "<group>"; };
 		13EEA1241B93411600CFF166 /* MobClick.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MobClick.h; sourceTree = "<group>"; };
 		13EEA1261B93413700CFF166 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
@@ -192,6 +201,8 @@
 		13D89BD21B93054900467439 /* Controller */ = {
 			isa = PBXGroup;
 			children = (
+				13DAE2C41BBCC6ED00964537 /* LoginViewController.h */,
+				13DAE2C51BBCC6ED00964537 /* LoginViewController.m */,
 				13EEA12B1B9348D900CFF166 /* Office */,
 				13EEA12C1B9348E000CFF166 /* Setting */,
 			);
@@ -201,6 +212,8 @@
 		13D89BE81B93067300467439 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				13DAE2CD1BBCC70B00964537 /* KGModal */,
+				13DAE2CE1BBCC71000964537 /* BZGFormField */,
 				13EEA1331B9363F500CFF166 /* SIAlertView */,
 				13EEA1221B9340EF00CFF166 /* Umeng */,
 				13D89BE91B93071900467439 /* MBProgressHUD */,
@@ -215,6 +228,24 @@
 				13D89BEB1B93071900467439 /* MBProgressHUD.m */,
 			);
 			path = MBProgressHUD;
+			sourceTree = "<group>";
+		};
+		13DAE2CD1BBCC70B00964537 /* KGModal */ = {
+			isa = PBXGroup;
+			children = (
+				13DAE2CB1BBCC70800964537 /* KGModal.h */,
+				13DAE2CA1BBCC70800964537 /* KGModal.m */,
+			);
+			name = KGModal;
+			sourceTree = "<group>";
+		};
+		13DAE2CE1BBCC71000964537 /* BZGFormField */ = {
+			isa = PBXGroup;
+			children = (
+				13DAE2C71BBCC6FC00964537 /* BZGFormField.h */,
+				13DAE2C81BBCC6FC00964537 /* BZGFormField.m */,
+			);
+			name = BZGFormField;
 			sourceTree = "<group>";
 		};
 		13EEA1221B9340EF00CFF166 /* Umeng */ = {
@@ -425,8 +456,11 @@
 				13D89BE11B93058D00467439 /* OfficeDetailViewController.m in Sources */,
 				13D89BE21B93058D00467439 /* OfficeFooterView.m in Sources */,
 				13EEA13A1B9363F500CFF166 /* SIAlertView.m in Sources */,
+				13DAE2C91BBCC6FC00964537 /* BZGFormField.m in Sources */,
 				13EEA12A1B9342A700CFF166 /* SettingTableViewController.m in Sources */,
 				13EEA12F1B9348EF00CFF166 /* AboutViewController.m in Sources */,
+				13DAE2CC1BBCC70800964537 /* KGModal.m in Sources */,
+				13DAE2C61BBCC6ED00964537 /* LoginViewController.m in Sources */,
 				13EEA1321B93490600CFF166 /* FeedbackTableViewController.m in Sources */,
 				13D89BE71B93058D00467439 /* OfficeTableViewController.m in Sources */,
 				13D89BE31B93058D00467439 /* OfficeLabel.m in Sources */,
@@ -563,6 +597,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = STUOffice/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -583,6 +618,7 @@
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = STUOffice/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

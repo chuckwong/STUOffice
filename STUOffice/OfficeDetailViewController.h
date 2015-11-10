@@ -10,7 +10,12 @@
 
 @interface OfficeDetailViewController : UIViewController
 
-@property (copy, nonatomic) NSString *url;
+@property (copy, nonatomic) NSString *detail;
 
+@property (copy, nonatomic) NSString *publisher;
+
+@property (copy, nonatomic) NSString *documentTitle;
+
+@property (copy, nonatomic) NSString *dateStr;
 
 @end

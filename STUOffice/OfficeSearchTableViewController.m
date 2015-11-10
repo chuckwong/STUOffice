@@ -179,7 +179,7 @@
 #pragma mark - formate
 - (NSString *)shrinkTitle:(NSString *)title
 {
-    return [NSString stringWithFormat:@"          %@", title];
+    return [NSString stringWithFormat:@"            %@", title];
 }
 
 
@@ -247,7 +247,6 @@
     UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     OfficeDetailViewController *odvc = [sb instantiateViewControllerWithIdentifier:@"odvc"];
     odvc.title = _officeData[section][@"publisher2"];
-    odvc.url = _officeData[section][@"contentURL"];
     [self.searchBar resignFirstResponder];
     [self.navigationController pushViewController:odvc animated:YES];
 }

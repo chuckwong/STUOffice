@@ -10,11 +10,17 @@
 #import <AFNetworking/AFNetworking.h>
 #import "MBProgressHUD.h"
 #import "MobClick.h"
+#import "OfficeLabel.h"
 
-@interface OfficeDetailViewController () <UIWebViewDelegate>
-@property (weak, nonatomic) IBOutlet UIWebView *webView;
+@interface OfficeDetailViewController ()
+
+@property (weak, nonatomic) IBOutlet UIView *officeView;
+@property (weak, nonatomic) IBOutlet UILabel *publisherLabel;
+@property (weak, nonatomic) IBOutlet UITextView *detailTextView;
+@property (weak, nonatomic) IBOutlet OfficeLabel *documentTitleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *dateLabel;
+
 @end
-
 
 @implementation OfficeDetailViewController
 
@@ -22,9 +28,12 @@
 {
     [super viewDidLoad];
     [self setupBackBarButton];
-    [self setupWebView];
+    [self setupView];
+    [self setupData];
+    NSLog(@"%@", _detail);
 }
 
+#pragma mark - setup method
 - (void)setupBackBarButton
 {
     UIBarButtonItem *backItem = [[UIBarButtonItem alloc] initWithTitle:@""
@@ -34,29 +43,22 @@
     [self.navigationItem setBackBarButtonItem:backItem];
 }
 
-- (void)setupWebView
-{
-    self.webView.delegate = self;
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
-    [MBProgressHUD showHUDAddedTo:self.navigationController.view animated:YES];
-    [self performSelector:@selector(showDetailWithURL:) withObject:_url afterDelay:0.4];
+- (void)setupView {
+    // officeView
+    self.officeView.layer.cornerRadius = 4.0;
+    
+    // publisherLabel
+    self.publisherLabel.layer.cornerRadius = 2.5;
+    self.publisherLabel.layer.masksToBounds = YES;
 }
 
-
-- (void)showDetailWithURL:(NSString *)url
-{
-    AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-    manager.requestSerializer.timeoutInterval = 3.0;
-    [manager.requestSerializer setValue:@"Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4" forHTTPHeaderField:@"User-Agent"];
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    [manager GET:url parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        [self.webView loadHTMLString:[self dealWithHtml:operation.responseString] baseURL:nil];
-        [MBProgressHUD hideHUDForView:self.navigationController.view animated:YES];
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        [self dealWithError];
-    }];
+- (void)setupData {
+    _documentTitleLabel.text = _documentTitle;
+    _detailTextView.text = _detail;
+    _publisherLabel.text = _publisher;
+    _dateLabel.text = _dateStr;
 }
+
 
 // display error
 - (void)dealWithError
@@ -82,24 +84,6 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-
-- (NSString *)dealWithHtml:(NSString *)responseHtml
-{
-    responseHtml = [[[[responseHtml stringByReplacingOccurrencesOfString:@"FONT-FAMILY: Verdana;" withString:@"background: #eeeeee;"] stringByReplacingOccurrencesOfString:@"#ffffff" withString:@"#eeeeee"] stringByReplacingOccurrencesOfString:@"<hr />" withString:@""] stringByReplacingOccurrencesOfString:@"<hr>" withString:@""];
-    return responseHtml;
-}
-
-
-// opening url
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
-{
-    if ( navigationType == UIWebViewNavigationTypeLinkClicked ) {
-        [MobClick event:@"Open_Link"];
-        [[UIApplication sharedApplication] openURL:[request URL]];
-        return NO;
-    }
-    return YES;
-}
 
 
 

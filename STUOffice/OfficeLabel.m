@@ -15,7 +15,7 @@
 - (id)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
-        self.verticalAlignment = VerticalAlignmentMiddle;
+        self.verticalAlignment = VerticalAlignmentTop;
     }
     return self;
 }
