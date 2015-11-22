@@ -54,7 +54,10 @@
 
 - (void)setupData {
     _documentTitleLabel.text = _documentTitle;
+    // force detailTextView appears on the top (wo zhen tm ji zhi)
+    _detailTextView.scrollEnabled = false;
     _detailTextView.text = _detail;
+    _detailTextView.scrollEnabled = true;
     _publisherLabel.text = _publisher;
     _dateLabel.text = _dateStr;
 }
