@@ -21,9 +21,9 @@
 		13D89BE61B93058D00467439 /* OfficeTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BDE1B93058D00467439 /* OfficeTableViewCell.m */; };
 		13D89BE71B93058D00467439 /* OfficeTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BE01B93058D00467439 /* OfficeTableViewController.m */; };
 		13D89BEC1B93071900467439 /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 13D89BEB1B93071900467439 /* MBProgressHUD.m */; };
-		13DAE2C61BBCC6ED00964537 /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C51BBCC6ED00964537 /* LoginViewController.m */; settings = {ASSET_TAGS = (); }; };
-		13DAE2C91BBCC6FC00964537 /* BZGFormField.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C81BBCC6FC00964537 /* BZGFormField.m */; settings = {ASSET_TAGS = (); }; };
-		13DAE2CC1BBCC70800964537 /* KGModal.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2CA1BBCC70800964537 /* KGModal.m */; settings = {ASSET_TAGS = (); }; };
+		13DAE2C61BBCC6ED00964537 /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C51BBCC6ED00964537 /* LoginViewController.m */; };
+		13DAE2C91BBCC6FC00964537 /* BZGFormField.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2C81BBCC6FC00964537 /* BZGFormField.m */; };
+		13DAE2CC1BBCC70800964537 /* KGModal.m in Sources */ = {isa = PBXBuildFile; fileRef = 13DAE2CA1BBCC70800964537 /* KGModal.m */; };
 		13EEA1251B93411600CFF166 /* libMobClickLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13EEA1231B93411600CFF166 /* libMobClickLibrary.a */; };
 		13EEA1271B93413700CFF166 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 13EEA1261B93413700CFF166 /* libz.dylib */; };
 		13EEA12A1B9342A700CFF166 /* SettingTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 13EEA1291B9342A700CFF166 /* SettingTableViewController.m */; };
@@ -364,7 +364,7 @@
 				TargetAttributes = {
 					13D89BA71B93049E00467439 = {
 						CreatedOnToolsVersion = 6.4;
-						DevelopmentTeam = XCDEQTH595;
+						DevelopmentTeam = 9N3E8EP2SJ;
 					};
 					13D89BC01B93049F00467439 = {
 						CreatedOnToolsVersion = 6.4;
@@ -526,6 +526,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -569,6 +570,7 @@
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
